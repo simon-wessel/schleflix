@@ -56,6 +56,11 @@ def sanitize_filename(s):
     valid_chars = "-_.() %s%s" % (string.ascii_letters, string.digits)
     filename = ''.join(c for c in s if c in valid_chars)
     filename = filename.replace(' ', '_')
+
+    # Special case: Make sure the last character is not a dot. Windows will not be able to handle it
+    if filename[-1] == '.':
+        filename += "_"
+
     return filename
 
 
