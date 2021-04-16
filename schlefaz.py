@@ -29,7 +29,7 @@ def get_movie_urls():
 
     movie_urls = []
     for link in links:
-        movie_urls.append("https://www.tele5.de{0}".format(link['href']))
+        movie_urls.append(f"https://www.tele5.de{link['href']}")
 
     return movie_urls
 
@@ -44,7 +44,7 @@ def get_video_id(movie_url):
 
 
 def get_video_data(video_id):
-    api_url = "https://cdn.jwplayer.com/v2/media/{0}".format(video_id)
+    api_url = f"https://cdn.jwplayer.com/v2/media/{video_id}"
 
     with urllib.request.urlopen(api_url) as response:
         data = json.loads(response.read())
@@ -77,9 +77,9 @@ class YoutubeDlLogger(object):
 
 def download_video(download_link, file_name, path):
     ydl_opts = {
-        "outtmpl": '{}/{}.%(ext)s'.format(path, file_name),
+        "outtmpl": f"{path}/{file_name}.%(ext)s",
         "logger": YoutubeDlLogger(),
-        "quiet": YDL_QUIET_MODE
+        "quiet": YDL_QUIET_MODE,
     }
 
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
@@ -90,7 +90,7 @@ def save_json(data, file_name, path):
     if not SAVE_JSON:
         return
 
-    with open('{}/{}.json'.format(path, file_name), 'w') as outfile:
+    with open(f'{path}/{file_name}.json', 'w') as outfile:
         json.dump(data, outfile, indent=4)
 
 
@@ -101,10 +101,10 @@ def download_cover(video_data, file_name, path):
     try:
         cover_url = video_data['playlist'][0]['thumb_alt']
     except:
-        print("Failed finding cover link for {}".format(file_name))
+        print(f"Failed finding cover link for {file_name}")
         return
 
-    urllib.request.urlretrieve(cover_url, "{}/{}.jpg".format(path, file_name))
+    urllib.request.urlretrieve(cover_url, f"{path}/{file_name}.jpg")
 
 
 def replace_umlaut(string):
@@ -127,26 +127,27 @@ def download_worker(movie_url):
         movie_name = replace_umlaut(video_data['title'])
         pubdate = int(video_data['playlist'][0]['pubdate'])
     except:
-        print("Couldn't retrieve or parse information for id {0}".format(video_id))
+        print(f"Couldn't retrieve or parse information for id {video_id}")
         return
 
-    file_name = sanitize_filename(
-        "{}_{}".format(datetime.utcfromtimestamp(pubdate).strftime('%Y-%m-%d'), movie_name))
-    path = "{}/{}".format(OUTPUT_DIRECTORY, file_name)
+    formatted_date = datetime.utcfromtimestamp(pubdate).strftime('%Y-%m-%d')
+    file_name = sanitize_filename(f"{formatted_date}_{movie_name}")
+    path = f"{OUTPUT_DIRECTORY}/{file_name}"
 
-    if not glob.glob("{}/{}.*".format(path, file_name)) or not SKIP_EXISTING_MOVIES:
-        print("Downloading movie '{}'...".format(file_name))
-        download_video(download_link, file_name, path)
-        save_json(video_data, file_name, path)
-        download_cover(video_data, file_name, path)
-    else:
-        print("Skipping already existing movie '{}'".format(file_name))
+    if glob.glob(f"{path}/{file_name}.*") and SKIP_EXISTING_MOVIES:
+        print(f"Skipping already existing movie '{file_name}'")
+        return
+
+    print(f"Downloading movie '{file_name}'...")
+    download_video(download_link, file_name, path)
+    save_json(video_data, file_name, path)
+    download_cover(video_data, file_name, path)
 
 
 def main():
     movie_urls = get_movie_urls()
 
-    print("Found {} movies. Starting download with {} parallel workers...".format(len(movie_urls), MAX_WORKERS))
+    print(f"Found {len(movie_urls)} movies. Starting download with {MAX_WORKERS} parallel workers...")
 
     with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
         for movie_url in movie_urls:
