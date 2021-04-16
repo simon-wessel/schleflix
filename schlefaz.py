@@ -8,16 +8,11 @@ import requests
 import urllib, json
 import youtube_dl
 import glob
+import environ
 
 from concurrent.futures import ThreadPoolExecutor
 
-SAVE_JSON = True
-DOWNLOAD_COVER = True
-SKIP_EXISTING_MOVIES = True
-YDL_QUIET_MODE = True
-MAX_WORKERS = 3
-OUTPUT_DIRECTORY = "output"
-
+env = environ.Env(DEBUG=(bool, True))
 
 def get_movie_urls():
     schlefaz_mediathek_url = "https://www.tele5.de/schlefaz/mediathek/"
@@ -79,7 +74,7 @@ def download_video(download_link, file_name, path):
     ydl_opts = {
         "outtmpl": f"{path}/{file_name}.%(ext)s",
         "logger": YoutubeDlLogger(),
-        "quiet": YDL_QUIET_MODE,
+        "quiet": env.bool("YDL_QUIET_MODE", True),
     }
 
     with youtube_dl.YoutubeDL(ydl_opts) as ydl:
@@ -87,7 +82,7 @@ def download_video(download_link, file_name, path):
 
 
 def save_json(data, file_name, path):
-    if not SAVE_JSON:
+    if not env.bool("SAVE_JSON", True):
         return
 
     with open(f'{path}/{file_name}.json', 'w') as outfile:
@@ -95,7 +90,7 @@ def save_json(data, file_name, path):
 
 
 def download_cover(video_data, file_name, path):
-    if not DOWNLOAD_COVER:
+    if not env.bool("DOWNLOAD_COVER", True):
         return
 
     try:
@@ -132,9 +127,9 @@ def download_worker(movie_url):
 
     formatted_date = datetime.utcfromtimestamp(pubdate).strftime('%Y-%m-%d')
     file_name = sanitize_filename(f"{formatted_date}_{movie_name}")
-    path = f"{OUTPUT_DIRECTORY}/{file_name}"
+    path = f"{env.str('OUTPUT_DIRECTORY', 'SchleFaZ')}/{file_name}"
 
-    if glob.glob(f"{path}/{file_name}.*") and SKIP_EXISTING_MOVIES:
+    if env.bool("SKIP_EXISTING_MOVIES", True) and glob.glob(f"{path}/{file_name}.*"):
         print(f"Skipping already existing movie '{file_name}'")
         return
 
@@ -145,11 +140,15 @@ def download_worker(movie_url):
 
 
 def main():
+    # Load environment variables
+    environ.Env.read_env()
+
+    max_workers = env.int('MAX_WORKERS', 1)
     movie_urls = get_movie_urls()
 
-    print(f"Found {len(movie_urls)} movies. Starting download with {MAX_WORKERS} parallel workers...")
+    print(f"Found {len(movie_urls)} movies. Starting download with {max_workers} parallel workers...")
 
-    with ThreadPoolExecutor(max_workers=MAX_WORKERS) as executor:
+    with ThreadPoolExecutor(max_workers=max_workers) as executor:
         for movie_url in movie_urls:
             executor.submit(download_worker, movie_url)
 
