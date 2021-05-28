@@ -1,7 +1,11 @@
 # schleflix
 Download script for SchleFlix (SchleFaZ Mediathek).
 This script will download all SchleFaZ movies available in the Mediathek including the cover image files.
-You can run this script regularly to add new movies as they are released. 
+You can run this script regularly to add new movies as they are released.
+
+## Requirements
+
+1. Python 3
 
 ## Installation and Usage
 
@@ -23,3 +27,7 @@ The following instructions are for Linux systems, but you may also run this scri
 4. Run script
     1. `python3 schlefaz.py`
     1. Movies will be downloaded to the subdirectory `output` by default settings
+
+## Known Issues
+
+1. The script may download movies again to another subdirectory if they have been reuploaded to the Mediathek.
