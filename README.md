@@ -4,8 +4,7 @@ This script will download all SchleFaZ movies available in the Mediathek includi
 You can run this script regularly to add new movies as they are released.
 
 ## Requirements
-
-1. Python 3
+* Python 3
 
 ## Installation and Usage
 
@@ -16,7 +15,7 @@ The following instructions are for Linux systems, but you may also run this scri
     2. `cd schleflix`
 1. (Optional) Install and activate virtual environment
     1. `python3 -m venv env`
-    1. `source env/bin/activate
+    1. `source env/bin/activate`
 1. Download requirements
     1. `pip3 install -r requirements.txt`
 3. Set up .env file
@@ -30,4 +29,4 @@ The following instructions are for Linux systems, but you may also run this scri
 
 ## Known Issues
 
-1. The script may download movies again to another subdirectory if they have been reuploaded to the Mediathek.
+* The script may download movies again to another subdirectory if they have been reuploaded to the Mediathek.
